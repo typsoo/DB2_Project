@@ -80,5 +80,4 @@ public class Reservation {
         this.status = status;
     }
 
-    // ОБЯЗАТЕЛЬНО: Сгенерируй Геттеры и Сеттеры (Alt + Insert -> Getter and Setter)
 }
