@@ -58,10 +58,8 @@ public class UserService {
         profileDto.setLastName(user.getLastName());
         profileDto.setCreatedAt(user.getCreatedAt());
 
-        // Берем баланс из кошелька!
         profileDto.setBalance(wallet.getBalance());
 
-        // 4. Возвращаем готовый результат
         return profileDto;
     }
 }

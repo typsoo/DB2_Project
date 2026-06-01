@@ -28,36 +28,30 @@ The project focuses on complex database logic and transaction management on the 
 
 The database architecture consists of 12 related tables, divided into 3 logical blocks:
 
+![Description](assets/images/db_scheme.png)
+
 ### Block 1: Users and Finances
+
 1. `users` — System users.
-   * `id` (PK), `email`, `password_hash`, `first_name`, `last_name`, `created_at`.
+    * `id` (PK), `email`, `password_hash`, `first_name`, `last_name`, `created_at`.
 2. `wallets` — Users' virtual wallets (1:1 relationship with `users`).
-   * `id` (PK), `user_id` (FK), `balance` (Numeric), `updated_at`.
+    * `id` (PK), `user_id` (FK), `balance` (Numeric), `updated_at`.
 3. `transactions` — History of deposits and charges (N:1 relationship to `wallets`).
-   * `id` (PK), `wallet_id` (FK), `amount`, `type` (DEPOSIT, RIDE_PAYMENT, REFUND), `created_at`.
-4. `subscriptions` — Active user subscriptions (e.g., "Free starts for a month").
-   * `id` (PK), `user_id` (FK), `plan_name`, `start_date`, `end_date`, `status`.
+    * `id` (PK), `wallet_id` (FK), `ride_id` (FK), `amount`, `type` (transaction_type), `created_at`.
 
 ### Block 2: Transport and Infrastructure
-5. `scooter_models` — Reference catalog of scooter models.
-   * `id` (PK), `name` (e.g., "Ninebot Max"), `max_speed`, `battery_capacity`.
-6. `scooters` — Specific physical units (N:1 relationship to `scooter_models`).
-   * `id` (PK), `model_id` (FK), `serial_number`, `charge_level` (0-100), `status` (AVAILABLE, IN_USE, RESERVED, MAINTENANCE), `latitude`, `longitude`.
-7. `cities` — Cities where the service operates.
-   * `id` (PK), `name`, `country_code`.
-8. `zones` — Geo-zones such as parking areas or no-ride zones (N:1 relationship to `cities`).
-   * `id` (PK), `city_id` (FK), `name`, `type` (PARKING, NO_RIDE_ZONE, SPEED_LIMIT_ZONE), `geometry` (polygon coordinates).
+
+4. `scooters` — Specific physical units.
+    * `id` (PK), `serial_number`, `charge_level` (int), `status` (scooter_status), `latitude`, `longitude`.
 
 ### Block 3: Rentals and Logging
-9. `reservations` — Temporary holds when a user is walking to the scooter. **Key table for testing concurrency.**
-   * `id` (PK), `user_id` (FK), `scooter_id` (FK), `reserved_at`, `expires_at`, `status` (ACTIVE, COMPLETED, CANCELLED).
-10. `rides` — Ride history and billing.
-    * `id` (PK), `user_id` (FK), `scooter_id` (FK), `start_time`, `end_time`, `start_zone_id` (FK), `end_zone_id` (FK), `distance`, `total_cost`.
-11. `telemetry_logs` — History of coordinate and battery changes for all scooters.
-    * `id` (PK), `scooter_id` (FK), `recorded_at`, `battery_level`, `latitude`, `longitude`.
-12. `promocodes` — Discount codes for rides.
-    * `id` (PK), `code`, `discount_percentage`, `usage_limit`, `valid_until`.
 
+5. `reservations` — Temporary holds when a user is walking to the scooter. **Key table for testing concurrency.**
+    * `id` (PK), `user_id` (FK), `scooter_id` (FK), `reserved_at`, `expires_at`, `status` (reservation_status).
+6. `rides` — Ride history and billing.
+    * `id` (PK), `user_id` (FK), `scooter_id` (FK), `start_time`, `end_time`, `distance`, `total_cost`.
+7. `telemetry_logs` — History of coordinate and battery changes for all scooters.
+    * `id` (PK), `scooter_id` (FK), `recorded_at`, `battery_level`, `latitude`, `longitude`.
 ## Key Database Scenarios
 
 ### 1. Rental Transaction with Race Condition Prevention
