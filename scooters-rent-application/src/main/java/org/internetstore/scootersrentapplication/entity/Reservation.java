@@ -6,8 +6,15 @@ import org.internetstore.scootersrentapplication.entity.enums.ReservationStatus;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reservations")
-public class Reservation {
+@Table(
+        name = "reservations",
+        indexes = {
+                @Index(
+                        name = "idx_reservations_status_expires_at",
+                        columnList = "status, expires_at"
+                )
+        }
+)public class Reservation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
