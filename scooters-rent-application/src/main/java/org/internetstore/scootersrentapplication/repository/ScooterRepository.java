@@ -17,6 +17,8 @@ public interface ScooterRepository extends JpaRepository<Scooter, Integer> {
 
     List<Scooter> findByStatus(ScooterStatus status);
 
+    // Wymuszamy blokadę na poziomie bazy danych (SELECT ... FOR UPDATE).
+    // Zapobiega to sytuacji, gdzie 2 osoby jednocześnie wypożyczają tę samą hulajnogę.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT s FROM Scooter s WHERE s.id = :id")
     Optional<Scooter> findByIdWithLock(@Param("id") Integer id);}
