@@ -26,7 +26,7 @@ public class WalletController {
 
         Wallet updatedWallet = walletService.deposit(userId, dto);
         WalletBalanceDto responseBody = new WalletBalanceDto(
-                "Deposit successful",
+                "Deposit successfully added",
                 updatedWallet.getBalance()
         );
 
