@@ -20,12 +20,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error); // 400
     }
 
-//    @ExceptionHandler(IllegalStateException.class)
-//    public ResponseEntity<ErrorResponse> handleArgumentErrors(IllegalArgumentException ex) {
-//        ErrorResponse error = new ErrorResponse("BUSINESS_ERROR", ex.getMessage());
-//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error); // 400
-//    }
-
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDatabaseErrors(DataIntegrityViolationException ex) {
         ErrorResponse error = new ErrorResponse("DATABASE_ERROR", "Data save failure. Incorrect database status or restriction.");
