@@ -5,6 +5,11 @@ import org.internetstore.scootersrentapplication.entity.enums.ReservationStatus;
 
 import java.time.LocalDateTime;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 @Entity
 @Table(
         name = "reservations",
@@ -38,53 +43,5 @@ import java.time.LocalDateTime;
 
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public Scooter getScooter() {
-        return scooter;
-    }
-
-    public void setScooter(Scooter scooter) {
-        this.scooter = scooter;
-    }
-
-    public LocalDateTime getReservedAt() {
-        return reservedAt;
-    }
-
-    public void setReservedAt(LocalDateTime reservedAt) {
-        this.reservedAt = reservedAt;
-    }
-
-    public LocalDateTime getExpiresAt() {
-        return expiresAt;
-    }
-
-    public void setExpiresAt(LocalDateTime expiresAt) {
-        this.expiresAt = expiresAt;
-    }
-
-    public ReservationStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(ReservationStatus status) {
-        this.status = status;
-    }
 
 }

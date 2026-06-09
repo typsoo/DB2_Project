@@ -12,8 +12,8 @@ import java.util.Optional;
 public interface WalletRepository extends JpaRepository<Wallet, Integer> {
     Optional<Wallet> findByUserId(Integer userId);
 
-    // fizyczna blokada wiersza portfela w bazie danych
-    // nikt inny nie może zmienić salda dopóki nie skończymy rozliczać przejazdu
+    // Physical row lock on the wallet in the database.
+    // Prevents concurrent balance modifications until the ride billing is completed.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT w FROM Wallet w WHERE w.user.id = :userId")
     Optional<Wallet> findByUserIdWithLock(Integer userId);

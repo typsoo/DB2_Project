@@ -12,12 +12,7 @@ import java.util.Optional;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Integer> {
 
-
     List<Reservation> findByStatusAndExpiresAtBefore(ReservationStatus status, LocalDateTime time);
-
-
     Optional<Reservation> findByUserIdAndStatus(Integer userId, ReservationStatus status);
-
-
     Optional<Reservation> findByScooterIdAndStatus(Integer scooterId, ReservationStatus status);
 }

@@ -1,5 +1,6 @@
 package org.internetstore.scootersrentapplication.controller;
 
+import jakarta.validation.Valid;
 import org.internetstore.scootersrentapplication.dto.RideDto;
 import org.internetstore.scootersrentapplication.dto.RideEndRequestDto;
 import org.internetstore.scootersrentapplication.dto.RideStartRequestDto;
@@ -21,7 +22,7 @@ public class RideController {
     }
 
     @PostMapping("/start")
-    public ResponseEntity<?> startRide(@RequestBody RideStartRequestDto request) {
+    public ResponseEntity<?> startRide(@Valid @RequestBody RideStartRequestDto request) {
         try {
             RideDto rideDto = rideService.startRide(request);
             return ResponseEntity.ok(rideDto);
@@ -32,7 +33,7 @@ public class RideController {
     }
 
     @PostMapping("/end")
-    public ResponseEntity<?> endRide(@RequestBody RideEndRequestDto request) {
+    public ResponseEntity<?> endRide(@Valid @RequestBody RideEndRequestDto request) {
         try {
             return ResponseEntity.ok(rideService.endRide(request));
         } catch (RuntimeException e) {

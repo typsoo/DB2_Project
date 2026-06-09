@@ -13,6 +13,7 @@ import org.locationtech.jts.geom.Polygon;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,7 +27,7 @@ public class ScooterController {
     private final ScooterLocationService locationService;
 
     @PostMapping
-    public ResponseEntity<ScooterResponseDto> createScooter(@RequestBody ScooterCreateDto dto) {
+    public ResponseEntity<ScooterResponseDto> createScooter(@Valid @RequestBody ScooterCreateDto dto) {
         Scooter createdScooter = scooterService.createScooter(dto);
         return new ResponseEntity<>(mapToDto(createdScooter), HttpStatus.CREATED);
     }
@@ -48,7 +49,7 @@ public class ScooterController {
     @PutMapping("/{id}/location")
     public ResponseEntity<Void> updateLocation(
             @PathVariable Integer id,
-            @RequestBody ScooterLocationUpdateDto dto) {
+            @Valid @RequestBody ScooterLocationUpdateDto dto) {
 
         locationService.updateLocation(id, dto.latitude(), dto.longitude());
         return ResponseEntity.ok().build();
