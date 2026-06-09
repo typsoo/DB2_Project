@@ -26,7 +26,7 @@ public class WalletService {
 
     @Transactional
     public Wallet deposit(Integer userId, DepositDto dto) {
-        if (dto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+        if (dto.amount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount must be greater than zero");
         }
 
@@ -34,14 +34,14 @@ public class WalletService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Wallet not found for this user"));
 
 
-        BigDecimal newBalance = wallet.getBalance().add(dto.getAmount());
+        BigDecimal newBalance = wallet.getBalance().add(dto.amount());
         wallet.setBalance(newBalance);
 
         walletRepository.save(wallet);
 
         Transaction transaction = new Transaction();
         transaction.setWallet(wallet);
-        transaction.setAmount(dto.getAmount());
+        transaction.setAmount(dto.amount());
         transaction.setType(TransactionType.DEPOSIT);
 
         transactionRepository.save(transaction);

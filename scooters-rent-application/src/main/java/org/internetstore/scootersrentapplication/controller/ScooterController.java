@@ -50,7 +50,7 @@ public class ScooterController {
             @PathVariable Integer id,
             @RequestBody ScooterLocationUpdateDto dto) {
 
-        locationService.updateLocation(id, dto.getLatitude(), dto.getLongitude());
+        locationService.updateLocation(id, dto.latitude(), dto.longitude());
         return ResponseEntity.ok().build();
     }
 

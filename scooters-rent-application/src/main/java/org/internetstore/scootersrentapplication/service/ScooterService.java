@@ -28,10 +28,10 @@ public class ScooterService {
     @Transactional
     public Scooter createScooter(ScooterCreateDto dto) {
         Scooter scooter = new Scooter();
-        scooter.setSerialNumber(dto.getSerialNumber());
+        scooter.setSerialNumber(dto.serialNumber());
 
         scooter.setLocation(geometryFactory.createPoint(
-                new Coordinate(dto.getLongitude(), dto.getLatitude())
+                new Coordinate(dto.longitude(), dto.latitude())
         ));
 
 
@@ -53,7 +53,7 @@ public class ScooterService {
 
 
         scooter.setLocation(geometryFactory.createPoint(
-                new Coordinate(dto.getLongitude(), dto.getLatitude())
+                new Coordinate(dto.longitude(), dto.latitude())
         ));
 
         return scooterRepository.save(scooter);

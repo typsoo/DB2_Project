@@ -26,7 +26,7 @@ public class RideService {
     private final ReservationRepository reservationRepository;
     private final TransactionRepository transactionRepository;
 
-    // Minimalne saldo
+    // Minimum balance
     private static final BigDecimal MIN_START_BALANCE = new BigDecimal("10.00");
     private static final BigDecimal PRICE_PER_MINUTE = new BigDecimal("1.50");
 
@@ -44,100 +44,99 @@ public class RideService {
     @Transactional
     public RideDto startRide(RideStartRequestDto request) {
 
-        // Wyciągamy hulajnogę z bazy z pesymistyczną blokadą, aby nikt inny nie mógł jej w tym samym czasie wypożyczyć
-        Scooter scooter = scooterRepository.findByIdWithLock(request.getScooterId())
+        // Fetch scooter from DB with pessimistic lock to prevent concurrent rentals
+        Scooter scooter = scooterRepository.findByIdWithLock(request.scooterId())
                 .orElseThrow(() -> new RuntimeException("Scooter was not found"));
 
-        // Sprawdzamy, czy hulajnoga nie jest w trakcie jazdy lub w naprawie
+        // Check if scooter is not in use or maintenance
         if (scooter.getStatus() == ScooterStatus.IN_USE || scooter.getStatus() == ScooterStatus.MAINTENANCE) {
             throw new RuntimeException("Scooter is unavailable");
         }
 
-        // Obsługa logiki rezerwacji
+        // Reservation logic handling
         if (scooter.getStatus() == ScooterStatus.RESERVED) {
             Reservation activeReservation = reservationRepository.findByScooterIdAndStatus(scooter.getId(), ReservationStatus.ACTIVE)
                     .orElseThrow(() -> new RuntimeException("System error: Scooter is reserved but active reservation not found"));
 
-            // Sprawdzamy, czy rezerwacja należy do użytkownika, który próbuje zacząć przejazd
-            if (!activeReservation.getUser().getId().equals(request.getUserId())) {
+            // Check if reservation belongs to the user trying to start the ride
+            if (!activeReservation.getUser().getId().equals(request.userId())) {
                 throw new RuntimeException("Scooter is reserved by another user");
             }
 
-            // Zamykamy rezerwację, bo użytkownik właśnie ją odbiera
+            // Close the reservation as the user is taking the scooter
             activeReservation.setStatus(ReservationStatus.COMPLETED);
             reservationRepository.save(activeReservation);
         }
 
-        // Pobieramy dane użytkownika oraz przypisany do niego portfel
-        User user = userRepository.findById(request.getUserId())
+        // Fetch user data and assigned wallet
+        User user = userRepository.findById(request.userId())
                 .orElseThrow(() -> new RuntimeException("User was not found"));
 
         Wallet wallet = walletRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Wallet was not found"));
 
-        // Sprawdzamy, czy na koncie jest minimalna kwota potrzebna na start
+        // Check if account has the minimum amount needed to start
         if (wallet.getBalance().compareTo(MIN_START_BALANCE) < 0) {
             throw new RuntimeException("Insufficient funds to start the ride");
         }
 
-        // Zmieniamy status hulajnogi na zajętą i zapisujemy zmiany w bazie
+        // Change scooter status to in use and save to DB
         scooter.setStatus(ScooterStatus.IN_USE);
         scooterRepository.save(scooter);
 
-        // Rejestrujemy nowy przejazd w systemie i przypisujemy mu obecny czas
+        // Register new ride in the system and assign current time
         Ride ride = new Ride();
         ride.setUser(user);
         ride.setScooter(scooter);
         ride.setStartTime(LocalDateTime.now());
         Ride savedRide = rideRepository.save(ride);
 
-        // Pakujemy najpotrzebniejsze dane w obiekt dto, żeby odesłać je do klienta
-        RideDto response = new RideDto();
-        response.setRideId(savedRide.getId());
-        response.setScooterId(scooter.getId());
-        response.setStartTime(savedRide.getStartTime());
-
-        return response;
+        // Pack the necessary data into the dto object to send it back to the client
+        return new RideDto(
+                savedRide.getId(),
+                scooter.getId(),
+                savedRide.getStartTime()
+        );
     }
 
     @Transactional
     public RideEndResponseDto endRide(RideEndRequestDto request) {
 
-        // szukamy przejazdu po id
-        Ride ride = rideRepository.findById(request.getRideId())
+        // find ride by id
+        Ride ride = rideRepository.findById(request.rideId())
                 .orElseThrow(() -> new RuntimeException("Ride was not found"));
 
-        // sprawdzamy czy przejazd nie został już wcześniej zakończony
+        // check if ride wasn't already finished
         if (ride.getEndTime() != null) {
             throw new RuntimeException("This ride is already finished");
         }
 
-        // rejestrujemy czas zakończenia i przekazany dystans
+        // register end time and provided distance
         LocalDateTime endTime = LocalDateTime.now();
         ride.setEndTime(endTime);
-        ride.setDistance(request.getDistance());
+        ride.setDistance(request.distance());
 
-        // obliczamy czas trwania w minutach
+        // calculate duration in minutes
         long durationInMinutes = Duration.between(ride.getStartTime(), endTime).toMinutes();
 
-        // jeśli ktoś jeździł krócej niż minutę to i tak liczymy jako jedną żeby nie było darmowych przejazdów
+        // if someone rode less than a minute we still count it as one to prevent free rides
         if (durationInMinutes == 0) {
             durationInMinutes = 1;
         }
 
-        // obliczamy koszt na podstawie czasu
+        // calculate cost based on time
         BigDecimal totalCost = PRICE_PER_MINUTE.multiply(BigDecimal.valueOf(durationInMinutes));
         ride.setTotalCost(totalCost);
 
-        // blokujemy portfel żeby zapobiec podwójnemu wydaniu środków w tym samym ułamku sekundy
+        // lock wallet to prevent double spending in the same fraction of a second
         Wallet wallet = walletRepository.findByUserIdWithLock(ride.getUser().getId())
                 .orElseThrow(() -> new RuntimeException("Wallet was not found"));
 
-        // ściągamy pieniądze z konta nawet jeśli wejdzie na minus
+        // withdraw money from account even if it goes negative
         wallet.setBalance(wallet.getBalance().subtract(totalCost));
         walletRepository.save(wallet);
 
-        // tworzymy zapis o transakcji dla historii płatności
+        // create a transaction record for payment history
         Transaction paymentTransaction = new Transaction();
         paymentTransaction.setWallet(wallet);
         paymentTransaction.setRide(ride);
@@ -146,21 +145,20 @@ public class RideService {
         paymentTransaction.setCreatedAt(LocalDateTime.now());
         transactionRepository.save(paymentTransaction);
 
-        // zwalniamy hulajnogę dla innych użytkowników
+        // release scooter for other users
         Scooter scooter = ride.getScooter();
         scooter.setStatus(ScooterStatus.AVAILABLE);
         scooterRepository.save(scooter);
 
-        // zapisujemy zaktualizowany przejazd
+        // save updated ride
         rideRepository.save(ride);
 
-        // przygotowujemy odpowiedź z paragonem
-        RideEndResponseDto response = new RideEndResponseDto();
-        response.setRideId(ride.getId());
-        response.setTotalCost(totalCost);
-        response.setEndTime(endTime);
-        response.setDurationInMinutes(durationInMinutes);
-
-        return response;
+        // prepare response with receipt
+        return new RideEndResponseDto(
+                ride.getId(),
+                totalCost,
+                endTime,
+                durationInMinutes
+        );
     }
 }

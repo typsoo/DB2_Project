@@ -1,7 +1,7 @@
 package org.internetstore.scootersrentapplication.service;
 
 import lombok.RequiredArgsConstructor;
-import org.internetstore.scootersrentapplication.dto.ReservationDto;
+import org.internetstore.scootersrentapplication.dto.ReservationResponseDto;
 import org.internetstore.scootersrentapplication.entity.Reservation;
 import org.internetstore.scootersrentapplication.entity.Scooter;
 import org.internetstore.scootersrentapplication.entity.User;
@@ -26,7 +26,7 @@ public class ReservationService {
     //Add WalletService for checking balance before reservation
 
     @Transactional
-    public ReservationDto.Response reserveScooter(Integer userId, Integer scooterId) {
+    public ReservationResponseDto reserveScooter(Integer userId, Integer scooterId) {
         if (reservationRepository.findByUserIdAndStatus(userId, ReservationStatus.ACTIVE).isPresent()) {
             throw new IllegalStateException("You already have an active reservation");
         }
@@ -52,7 +52,7 @@ public class ReservationService {
 
         Reservation savedReservation = reservationRepository.save(reservation);
 
-        return new ReservationDto.Response(
+        return new ReservationResponseDto(
                 savedReservation.getId(),
                 savedReservation.getScooter().getId(),
                 savedReservation.getStatus(),
@@ -62,10 +62,10 @@ public class ReservationService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<ReservationDto.Response> getActiveUserReservation(Integer userId) {
+    public Optional<ReservationResponseDto> getActiveUserReservation(Integer userId) {
 
         return reservationRepository.findByUserIdAndStatus(userId, ReservationStatus.ACTIVE)
-                .map(reservation -> new ReservationDto.Response(
+                .map(reservation -> new ReservationResponseDto(
                         reservation.getId(),
                         reservation.getScooter().getId(),
                         reservation.getStatus(),

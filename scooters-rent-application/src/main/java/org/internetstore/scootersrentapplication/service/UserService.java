@@ -27,10 +27,10 @@ public class UserService {
     @Transactional
     public User registerUser(UserRegisterDto dto) {
         User user = new User();
-        user.setEmail(dto.getEmail());
-        user.setPasswordHash(dto.getPassword());
-        user.setFirstName(dto.getFirstName());
-        user.setLastName(dto.getLastName());
+        user.setEmail(dto.email());
+        user.setPasswordHash(dto.password());
+        user.setFirstName(dto.firstName());
+        user.setLastName(dto.lastName());
 
         User savedUser = userRepository.save(user);
 
@@ -51,15 +51,13 @@ public class UserService {
         Wallet wallet = walletRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Wallet not found for this user"));
 
-        UserProfileDto profileDto = new UserProfileDto();
-        profileDto.setId(user.getId());
-        profileDto.setEmail(user.getEmail());
-        profileDto.setFirstName(user.getFirstName());
-        profileDto.setLastName(user.getLastName());
-        profileDto.setCreatedAt(user.getCreatedAt());
-
-        profileDto.setBalance(wallet.getBalance());
-
-        return profileDto;
+        return new UserProfileDto(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                wallet.getBalance(),
+                user.getCreatedAt()
+        );
     }
 }

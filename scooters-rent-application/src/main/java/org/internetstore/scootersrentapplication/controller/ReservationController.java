@@ -2,7 +2,8 @@ package org.internetstore.scootersrentapplication.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.internetstore.scootersrentapplication.dto.ReservationDto;
+import org.internetstore.scootersrentapplication.dto.ReservationCreateRequestDto;
+import org.internetstore.scootersrentapplication.dto.ReservationResponseDto;
 import org.internetstore.scootersrentapplication.service.ReservationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +21,11 @@ public class ReservationController {
      * POST /api/v1/reservations
      */
     @PostMapping
-    public ResponseEntity<ReservationDto.Response> createReservation(
+    public ResponseEntity<ReservationResponseDto> createReservation(
             @RequestHeader("X-User-Id") Integer userId, // We should take it from Security Context (JWT)
-            @Valid @RequestBody ReservationDto.CreateRequest request) {
+            @Valid @RequestBody ReservationCreateRequestDto request) {
 
-        ReservationDto.Response response = reservationService.reserveScooter(userId, request.scooterId());
+        ReservationResponseDto response = reservationService.reserveScooter(userId, request.scooterId());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -34,7 +35,7 @@ public class ReservationController {
      * GET /api/v1/reservations/me/active
      */
     @GetMapping("/me/active")
-    public ResponseEntity<ReservationDto.Response> getActiveReservation(
+    public ResponseEntity<ReservationResponseDto> getActiveReservation(
             @RequestHeader("X-User-Id") Integer userId) {
 
         return reservationService.getActiveUserReservation(userId)
