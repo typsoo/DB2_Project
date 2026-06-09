@@ -7,10 +7,12 @@ import org.internetstore.scootersrentapplication.dto.ReservationResponseDto;
 import org.internetstore.scootersrentapplication.service.ReservationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.internetstore.scootersrentapplication.entity.User;
 
 @RestController
-@RequestMapping("/api/v1/reservations")
+@RequestMapping("/api/reservations")
 @RequiredArgsConstructor
 public class ReservationController {
 
@@ -18,14 +20,14 @@ public class ReservationController {
 
     /**
      * New reservation creating
-     * POST /api/v1/reservations
+     * POST /api/reservations
      */
     @PostMapping
     public ResponseEntity<ReservationResponseDto> createReservation(
-            @RequestHeader("X-User-Id") Integer userId, // We should take it from Security Context (JWT)
+            @AuthenticationPrincipal User user,
             @Valid @RequestBody ReservationCreateRequestDto request) {
 
-        ReservationResponseDto response = reservationService.reserveScooter(userId, request.scooterId());
+        ReservationResponseDto response = reservationService.reserveScooter(user.getId(), request.scooterId());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -36,9 +38,9 @@ public class ReservationController {
      */
     @GetMapping("/me/active")
     public ResponseEntity<ReservationResponseDto> getActiveReservation(
-            @RequestHeader("X-User-Id") Integer userId) {
+            @AuthenticationPrincipal User user) {
 
-        return reservationService.getActiveUserReservation(userId)
+        return reservationService.getActiveUserReservation(user.getId())
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -49,10 +51,10 @@ public class ReservationController {
      */
     @PostMapping("/{id}/cancel")
     public ResponseEntity<Void> cancelReservation(
-            @RequestHeader("X-User-Id") Integer userId,
+            @AuthenticationPrincipal User user,
             @PathVariable("id") Integer reservationId) {
 
-        reservationService.cancelReservation(userId, reservationId);
+        reservationService.cancelReservation(user.getId(), reservationId);
 
         return ResponseEntity.noContent().build();    }
 }

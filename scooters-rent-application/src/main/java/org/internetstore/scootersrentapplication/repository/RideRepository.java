@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RideRepository extends JpaRepository<Ride, Integer> {
+    boolean existsByUserIdAndEndTimeIsNull(Integer userId);
 }

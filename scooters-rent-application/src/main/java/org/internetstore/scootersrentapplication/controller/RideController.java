@@ -6,6 +6,8 @@ import org.internetstore.scootersrentapplication.dto.RideEndRequestDto;
 import org.internetstore.scootersrentapplication.dto.RideStartRequestDto;
 import org.internetstore.scootersrentapplication.service.RideService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.internetstore.scootersrentapplication.entity.User;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,9 +24,9 @@ public class RideController {
     }
 
     @PostMapping("/start")
-    public ResponseEntity<?> startRide(@Valid @RequestBody RideStartRequestDto request) {
+    public ResponseEntity<?> startRide(@AuthenticationPrincipal User user, @Valid @RequestBody RideStartRequestDto request) {
         try {
-            RideDto rideDto = rideService.startRide(request);
+            RideDto rideDto = rideService.startRide(user, request);
             return ResponseEntity.ok(rideDto);
         } catch (RuntimeException e) {
             // return error

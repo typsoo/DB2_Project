@@ -13,6 +13,7 @@ import org.locationtech.jts.geom.Polygon;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class ScooterController {
     private final ScooterService scooterService;
     private final ScooterLocationService locationService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ScooterResponseDto> createScooter(@Valid @RequestBody ScooterCreateDto dto) {
         Scooter createdScooter = scooterService.createScooter(dto);
@@ -39,6 +41,7 @@ public class ScooterController {
         return ResponseEntity.ok(mapToDto(scooter));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteScooter(@PathVariable Integer id) {
         scooterService.deleteScooter(id);

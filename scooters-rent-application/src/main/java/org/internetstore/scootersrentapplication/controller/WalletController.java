@@ -7,6 +7,7 @@ import org.internetstore.scootersrentapplication.service.WalletService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import org.internetstore.scootersrentapplication.entity.User;
 
 import java.util.Map;
 
@@ -20,12 +21,12 @@ public class WalletController {
         this.walletService = walletService;
     }
 
-    @PostMapping("/{user_id}/deposit")
+    @PostMapping("/deposit")
     public ResponseEntity<WalletBalanceDto> deposit(
-            @PathVariable("user_id") Integer userId,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal User user,
             @Valid @RequestBody DepositDto dto) {
 
-        Wallet updatedWallet = walletService.deposit(userId, dto);
+        Wallet updatedWallet = walletService.deposit(user.getId(), dto);
         WalletBalanceDto responseBody = new WalletBalanceDto(
                 "Deposit successfully added",
                 updatedWallet.getBalance()

@@ -19,16 +19,11 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
-    public ResponseEntity<User> register(@Valid @RequestBody UserRegisterDto dto) {
-        User createdUser = userService.registerUser(dto);
 
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
-    }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserProfileDto> getUserProfile(@PathVariable Integer id) {
-        UserProfileDto profile = userService.getUserProfile(id);
+    @GetMapping("/me")
+    public ResponseEntity<UserProfileDto> getUserProfile(@org.springframework.security.core.annotation.AuthenticationPrincipal User user) {
+        UserProfileDto profile = userService.getUserProfile(user.getId());
 
         return ResponseEntity.ok(profile);
     }

@@ -8,6 +8,7 @@ import org.internetstore.scootersrentapplication.entity.User;
 import org.internetstore.scootersrentapplication.entity.enums.ReservationStatus;
 import org.internetstore.scootersrentapplication.entity.enums.ScooterStatus;
 import org.internetstore.scootersrentapplication.repository.ReservationRepository;
+import org.internetstore.scootersrentapplication.repository.RideRepository;
 import org.internetstore.scootersrentapplication.repository.ScooterRepository;
 import org.internetstore.scootersrentapplication.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -23,12 +24,17 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final ScooterRepository scooterRepository;
     private final UserRepository userRepository;
+    private final RideRepository rideRepository;
     //Add WalletService for checking balance before reservation
 
     @Transactional
     public ReservationResponseDto reserveScooter(Integer userId, Integer scooterId) {
         if (reservationRepository.findByUserIdAndStatus(userId, ReservationStatus.ACTIVE).isPresent()) {
             throw new IllegalStateException("You already have an active reservation");
+        }
+
+        if (rideRepository.existsByUserIdAndEndTimeIsNull(userId)) {
+            throw new IllegalStateException("You cannot reserve a scooter while having an active ride");
         }
 
         Scooter scooter = scooterRepository.findByIdWithLock(scooterId)

@@ -18,17 +18,23 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, WalletRepository walletRepository) {
+    public UserService(UserRepository userRepository, WalletRepository walletRepository, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
     public User registerUser(UserRegisterDto dto) {
+        if (userRepository.existsByEmail(dto.email())) {
+            throw new IllegalStateException("User with this email already exists");
+        }
+
         User user = new User();
         user.setEmail(dto.email());
-        user.setPasswordHash(dto.password());
+        user.setPasswordHash(passwordEncoder.encode(dto.password()));
         user.setFirstName(dto.firstName());
         user.setLastName(dto.lastName());
 

@@ -25,6 +25,8 @@ import java.math.BigDecimal;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 
 @SpringBootTest
 @Transactional // Rollback changes in Neon DB!
@@ -49,7 +51,9 @@ public class RideControllerIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
 
         testUser = new User();
         testUser.setEmail("testcloud@test.com");
@@ -74,9 +78,10 @@ public class RideControllerIntegrationTest {
 
     @Test
     public void testStartRide_Success() throws Exception {
-        String json = "{\"userId\": " + testUser.getId() + ", \"scooterId\": " + testScooter.getId() + "}";
+        String json = "{\"scooterId\": " + testScooter.getId() + "}";
 
         mockMvc.perform(post("/api/rides/start")
+                .with(user(testUser))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(status().isOk())
@@ -90,9 +95,10 @@ public class RideControllerIntegrationTest {
         wallet.setBalance(new BigDecimal("5.00"));
         walletRepository.save(wallet);
 
-        String json = "{\"userId\": " + testUser.getId() + ", \"scooterId\": " + testScooter.getId() + "}";
+        String json = "{\"scooterId\": " + testScooter.getId() + "}";
 
         mockMvc.perform(post("/api/rides/start")
+                .with(user(testUser))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(status().isBadRequest())
@@ -101,8 +107,9 @@ public class RideControllerIntegrationTest {
 
     @Test
     public void testEndRide_Success() throws Exception {
-        String startJson = "{\"userId\": " + testUser.getId() + ", \"scooterId\": " + testScooter.getId() + "}";
+        String startJson = "{\"scooterId\": " + testScooter.getId() + "}";
         String response = mockMvc.perform(post("/api/rides/start")
+                .with(user(testUser))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(startJson))
                 .andReturn().getResponse().getContentAsString();
@@ -113,6 +120,7 @@ public class RideControllerIntegrationTest {
         String endJson = "{\"rideId\": " + idStr + ", \"distance\": 2.5}";
 
         mockMvc.perform(post("/api/rides/end")
+                .with(user(testUser))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(endJson))
                 .andExpect(status().isOk())

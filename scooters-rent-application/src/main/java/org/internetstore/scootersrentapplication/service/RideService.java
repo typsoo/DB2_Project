@@ -42,7 +42,11 @@ public class RideService {
     }
 
     @Transactional
-    public RideDto startRide(RideStartRequestDto request) {
+    public RideDto startRide(User user, RideStartRequestDto request) {
+
+        if (rideRepository.existsByUserIdAndEndTimeIsNull(user.getId())) {
+            throw new IllegalStateException("You already have an active ride");
+        }
 
         // Fetch scooter from DB with pessimistic lock to prevent concurrent rentals
         Scooter scooter = scooterRepository.findByIdWithLock(request.scooterId())
@@ -59,7 +63,7 @@ public class RideService {
                     .orElseThrow(() -> new RuntimeException("System error: Scooter is reserved but active reservation not found"));
 
             // Check if reservation belongs to the user trying to start the ride
-            if (!activeReservation.getUser().getId().equals(request.userId())) {
+            if (!activeReservation.getUser().getId().equals(user.getId())) {
                 throw new RuntimeException("Scooter is reserved by another user");
             }
 
@@ -68,9 +72,6 @@ public class RideService {
             reservationRepository.save(activeReservation);
         }
 
-        // Fetch user data and assigned wallet
-        User user = userRepository.findById(request.userId())
-                .orElseThrow(() -> new RuntimeException("User was not found"));
 
         Wallet wallet = walletRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Wallet was not found"));
