@@ -1,8 +1,13 @@
 package org.internetstore.scootersrentapplication.entity;
+import org.locationtech.jts.geom.Point;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.internetstore.scootersrentapplication.entity.enums.ScooterStatus;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "scooters")
 public class Scooter {
@@ -20,54 +25,8 @@ public class Scooter {
     @Enumerated(EnumType.STRING)
     private ScooterStatus status;
 
-    private Double latitude;
-    private Double longitude;
+    // Wea use GPS coordinates
+    @Column(columnDefinition = "geometry(Point,4326)")
+    private Point location;
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getSerialNumber() {
-        return serialNumber;
-    }
-
-    public void setSerialNumber(String serialNumber) {
-        this.serialNumber = serialNumber;
-    }
-
-    public ScooterStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(ScooterStatus status) {
-        this.status = status;
-    }
-
-    public Integer getChargeLevel() {
-        return chargeLevel;
-    }
-
-    public void setChargeLevel(Integer chargeLevel) {
-        this.chargeLevel = chargeLevel;
-    }
-
-    public Double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
-
-    public Double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
 }
