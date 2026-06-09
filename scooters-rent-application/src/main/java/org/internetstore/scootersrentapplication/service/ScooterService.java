@@ -1,10 +1,13 @@
 package org.internetstore.scootersrentapplication.service;
 
-import org.internetstore.scootersrentapplication.dto.LocationUpdateDto;
 import org.internetstore.scootersrentapplication.dto.ScooterCreateDto;
+import org.internetstore.scootersrentapplication.dto.ScooterLocationUpdateDto;
 import org.internetstore.scootersrentapplication.entity.Scooter;
 import org.internetstore.scootersrentapplication.entity.enums.ScooterStatus;
 import org.internetstore.scootersrentapplication.repository.ScooterRepository;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +19,7 @@ import java.util.List;
 public class ScooterService {
 
     private final ScooterRepository scooterRepository;
+    private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
     public ScooterService(ScooterRepository scooterRepository) {
         this.scooterRepository = scooterRepository;
@@ -25,8 +29,11 @@ public class ScooterService {
     public Scooter createScooter(ScooterCreateDto dto) {
         Scooter scooter = new Scooter();
         scooter.setSerialNumber(dto.getSerialNumber());
-        scooter.setLatitude(dto.getLatitude());
-        scooter.setLongitude(dto.getLongitude());
+
+        scooter.setLocation(geometryFactory.createPoint(
+                new Coordinate(dto.getLongitude(), dto.getLatitude())
+        ));
+
 
         scooter.setChargeLevel(100);
         scooter.setStatus(ScooterStatus.AVAILABLE);
@@ -34,20 +41,20 @@ public class ScooterService {
         return scooterRepository.save(scooter);
     }
 
-    public List<Scooter> getScooters(ScooterStatus status) {
-        if (status != null) {
-            return scooterRepository.findByStatus(status);
-        }
-        return scooterRepository.findAll();
+    public Scooter getScooterById(Integer id) {
+        return scooterRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Scooter with id " + id + " not found"));
     }
 
     @Transactional
-    public Scooter updateLocation(Integer id, LocationUpdateDto dto) {
+    public Scooter updateLocation(Integer id, ScooterLocationUpdateDto dto) {
         Scooter scooter = scooterRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Scooter not found"));
 
-        scooter.setLatitude(dto.getLatitude());
-        scooter.setLongitude(dto.getLongitude());
+
+        scooter.setLocation(geometryFactory.createPoint(
+                new Coordinate(dto.getLongitude(), dto.getLatitude())
+        ));
 
         return scooterRepository.save(scooter);
     }

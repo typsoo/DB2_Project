@@ -16,7 +16,7 @@ public class GlobalExceptionHandler {
     }
 
 //    @ExceptionHandler(IllegalStateException.class)
-//    public ResponseEntity<ErrorResponse> handleStateErrors(IllegalArgumentException ex) {
+//    public ResponseEntity<ErrorResponse> handleArgumentErrors(IllegalArgumentException ex) {
 //        ErrorResponse error = new ErrorResponse("BUSINESS_ERROR", ex.getMessage());
 //        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error); // 400
 //    }

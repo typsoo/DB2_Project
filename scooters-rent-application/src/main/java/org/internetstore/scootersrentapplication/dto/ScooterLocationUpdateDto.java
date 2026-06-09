@@ -1,6 +1,6 @@
 package org.internetstore.scootersrentapplication.dto;
 
-public class LocationUpdateDto {
+public class ScooterLocationUpdateDto {
     private Double latitude;
     private Double longitude;
 
