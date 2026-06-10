@@ -348,7 +348,7 @@ export default function BackgroundMap() {
     // Here you will send a POST request to your Spring Boot backend
 
     const token = localStorage.getItem("token");
-    await fetch("http://localhost:8080/api/reservations", {
+    const response = await fetch("http://localhost:8080/api/reservations", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -356,6 +356,11 @@ export default function BackgroundMap() {
       },
       body: JSON.stringify({ scooterId }),
     });
+
+    if (response.ok) {
+      setScooters((prev) => prev.filter((s) => s.id !== scooterId));
+      window.dispatchEvent(new Event("reservationUpdated"));
+    }
 
     // Close the InfoWindow after reservation
     setSelectedScooter(null);

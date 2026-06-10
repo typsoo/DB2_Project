@@ -26,7 +26,7 @@ export default function ActiveReservationCard({
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/v1/reservations/me/active",
+        "http://localhost:8080/api/reservations/me/active",
         {
           method: "GET",
           headers: {
@@ -56,7 +56,12 @@ export default function ActiveReservationCard({
     // Set up a listener to poll data periodically or handle updates
     const globalRefreshInterval = setInterval(fetchActiveReservation, 30000); // Optional fallback poll every 30s
 
-    return () => clearInterval(globalRefreshInterval);
+    window.addEventListener("reservationUpdated", fetchActiveReservation);
+
+    return () => {
+      clearInterval(globalRefreshInterval);
+      window.removeEventListener("reservationUpdated", fetchActiveReservation);
+    };
   }, [fetchActiveReservation]);
 
   // Separate effect to drive the high-frequency 1-second countdown timer
@@ -104,7 +109,7 @@ export default function ActiveReservationCard({
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/v1/reservations/${reservation.id}/cancel`,
+        `http://localhost:8080/api/reservations/${reservation.id}/cancel`,
         {
           method: "POST",
           headers: {
@@ -126,11 +131,22 @@ export default function ActiveReservationCard({
     }
   };
 
-  // Do not render anything if there is no active reservation
-  if (!reservation) return null;
+  // Show a placeholder if there is no active reservation
+  if (!reservation) {
+    return (
+      <div className="pointer-events-auto absolute top-5 left-5 z-[1000] flex flex-col p-4 min-w-[260px] rounded-2xl bg-black/40 backdrop-blur-md border border-white/20 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-all duration-300">
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+          Active Hold
+        </span>
+        <div className="flex items-center justify-center py-4 bg-white/5 rounded-xl border border-white/10">
+          <span className="text-sm text-gray-400">No active reservation</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="absolute top-5 left-5 z-[1000] flex flex-col p-5 min-w-[260px] rounded-2xl bg-black/40 backdrop-blur-md border border-white/20 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-all duration-300">
+    <div className="pointer-events-auto absolute top-5 left-5 z-[1000] flex flex-col p-5 min-w-[260px] rounded-2xl bg-black/40 backdrop-blur-md border border-white/20 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-all duration-300">
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
           Active Hold

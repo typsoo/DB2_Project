@@ -90,10 +90,9 @@ export default function Login() {
             onChange={handleChange}
           />
         ))}
-        <div className="flex justify-end">
+        <div className="flex justify-end text-sm text-gray-400 hover:text-[#f5d173] transition-colors">
           <a href="#">Forgot password?</a>
         </div>
-        className="text-sm text-gray-400 hover:text-[#f5d173] transition-colors"
         <button
           type="submit"
           disabled={isLoading}

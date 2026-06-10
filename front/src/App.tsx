@@ -3,6 +3,7 @@ import Register from "./pages/Register";
 import MapLayout from "./layouts/MapLayout";
 import Login from "./pages/Login";
 import ProtectedRoute from "./layouts/ProtectedRoutes";
+import MapPage from "./pages/MapPage";
 
 function App() {
   return (
@@ -11,7 +12,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="/map" />
+          <Route path="/map" element={<MapPage />} />
         </Route>
       </Route>
 
