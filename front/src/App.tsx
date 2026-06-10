@@ -11,7 +11,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="/map" element={<div>Интерфейс вашей карты здесь</div>} />
+          <Route path="/map" />
         </Route>
       </Route>
 

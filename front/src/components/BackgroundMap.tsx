@@ -7,6 +7,7 @@ import {
   Map,
   Marker,
   type MapEvent,
+  InfoWindow,
 } from "@vis.gl/react-google-maps";
 // Define the shape of our scooter data from the backend
 interface Scooter {
@@ -284,13 +285,13 @@ const snazzyStyle = [
 
 export default function BackgroundMap() {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim() || "";
-
   const [scooters, setScooters] = useState<Scooter[]>([]);
 
-  // Создаем ссылку для хранения ID нашего таймера
+  // 2. State to track the currently selected scooter
+  const [selectedScooter, setSelectedScooter] = useState<Scooter | null>(null);
+
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Функция для запроса на бэкенд (осталась почти без изменений)
   const fetchScootersInBounds = useCallback(
     async (mapInstance: google.maps.Map) => {
       const token = localStorage.getItem("token");
@@ -329,26 +330,36 @@ export default function BackgroundMap() {
     [],
   );
 
-  // Новая функция-обработчик с задержкой (Debounce)
   const handleMapIdle = useCallback(
-    // Используем правильный тип MapEvent
     (e: MapEvent) => {
-      // Если карты по какой-то причине нет в событии, прерываемся
       if (!e.map) return;
-
-      // 1. Если таймер уже был запущен (юзер снова подвинул карту), отменяем его
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
-
-      // 2. Заводим новый таймер. Запрос уйдет только через 800 мс простоя.
-      // Можете изменить 800 на 1000 (1 секунда) или 500 (полсекунды) по вкусу.
       debounceTimeoutRef.current = setTimeout(() => {
         fetchScootersInBounds(e.map);
       }, 800);
     },
     [fetchScootersInBounds],
   );
+
+  // 3. Function to handle the reservation button click
+  const handleReservation = async (scooterId: number) => {
+    // Here you will send a POST request to your Spring Boot backend
+
+    const token = localStorage.getItem("token");
+    await fetch("http://localhost:8080/api/reservations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ scooterId }),
+    });
+
+    // Close the InfoWindow after reservation
+    setSelectedScooter(null);
+  };
 
   return (
     <div className="h-full w-full bg-[#000000]">
@@ -358,21 +369,63 @@ export default function BackgroundMap() {
           defaultCenter={{ lat: 50.0614, lng: 19.9383 }}
           defaultZoom={14}
           disableDefaultUI={true}
-          styles={snazzyStyle}
           onIdle={handleMapIdle}
+          styles={snazzyStyle}
         >
           {scooters.map((scooter) => (
             <Marker
               key={scooter.id}
               position={{
-                lat: scooter.latitude, // Используем правильное имя с бэкенда
-                lng: scooter.longitude, // Используем правильное имя с бэкенда
+                lat: scooter.latitude,
+                lng: scooter.longitude,
               }}
-              // При желании, вы даже можете использовать chargeLevel
-              // для отображения разных иконок!
-              title={`Самокат ${scooter.serialNumber} (Заряд: ${scooter.chargeLevel}%)`}
+              title={`Scooter ${scooter.serialNumber} (Battery: ${scooter.chargeLevel}%)`}
+              // THIS IS THE MISSING LINE:
+              // It tells React to set this specific scooter into the state when clicked
+              onClick={() => setSelectedScooter(scooter)}
             />
           ))}
+
+          {/* 5. Render the InfoWindow conditionally if a scooter is selected */}
+          {selectedScooter && (
+            <InfoWindow
+              position={{
+                lat: selectedScooter.latitude,
+                lng: selectedScooter.longitude,
+              }}
+              // Handle clicking the 'X' button on the InfoWindow
+              onCloseClick={() => setSelectedScooter(null)}
+              // Offset to push the popup slightly above the marker
+              pixelOffset={[0, -35]}
+            >
+              {/* Glassmorphism container: semi-transparent background, blur, and subtle border */}
+              <div className="flex flex-col p-5 min-w-[200px] rounded-2xl bg-black/10 backdrop-blur-md border border-white/20 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+                <h3 className="font-bold text-xl mb-1 text-white">
+                  Scooter {selectedScooter.serialNumber}
+                </h3>
+
+                <div className="flex items-center gap-2 mb-5 text-sm text-gray-200">
+                  <span className="font-semibold">Battery:</span>
+                  <span
+                    className={
+                      selectedScooter.chargeLevel < 20
+                        ? "text-red-400 font-bold drop-shadow-md"
+                        : "text-[#e5c163] font-bold drop-shadow-md"
+                    }
+                  >
+                    {selectedScooter.chargeLevel}%
+                  </span>
+                </div>
+
+                <button
+                  onClick={() => handleReservation(selectedScooter.id)}
+                  className="w-full py-2.5 bg-[#e5c163] hover:bg-[#c29b27] text-black font-bold rounded-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+                >
+                  Reserve Now
+                </button>
+              </div>
+            </InfoWindow>
+          )}
         </Map>
       </APIProvider>
     </div>

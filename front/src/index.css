@@ -5,3 +5,20 @@ html, body {
   margin: 0;
   padding: 0;
 }
+
+/* Make the default Google InfoWindow completely transparent */
+.gm-style-iw.gm-style-iw-c {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* Hide the default white triangle pointing down */
+.gm-style-iw-tc {
+  display: none !important;
+}
+
+/* Optional: Make the default Google 'X' close button white to be visible on dark glass */
+.gm-style-iw-c .gm-ui-hover-effect span {
+  background-color: white !important;
+}
