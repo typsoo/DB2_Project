@@ -1,8 +1,9 @@
 import AuthLayout from "../layouts/AuthLayout";
 import { CustomInput } from "../components/CustomInput";
 
-export default function Login() {
+export default function Register() {
   const formFields = [
+    { id: "username", label: "User's name", placeholder: "Enter your Name" },
     { id: "email", label: "Email", placeholder: "Enter email", type: "email" },
     {
       id: "password",
@@ -10,14 +11,20 @@ export default function Login() {
       placeholder: "Enter your password",
       type: "password",
     },
+    {
+      id: "confirmPassword",
+      label: "Password confirmation",
+      placeholder: "Confirm your password",
+      type: "password",
+    },
   ];
 
   return (
     <AuthLayout
-      title="Log in"
-      footerText="Don't have an account?"
-      footerLinkText="Register"
-      footerLinkTo="/register"
+      title="Registration"
+      footerText="You already have an account?"
+      footerLinkText="Log in"
+      footerLinkTo="/login"
     >
       <form className="flex flex-col gap-5">
         {formFields.map((field) => (
@@ -30,20 +37,11 @@ export default function Login() {
           />
         ))}
 
-        <div className="flex justify-end">
-          <a
-            href="#"
-            className="text-sm text-gray-400 hover:text-[#f5d173] transition-colors"
-          >
-            Forgot password?
-          </a>
-        </div>
-
         <button
           type="submit"
           className="mt-4 py-3 rounded-lg bg-[#e5c163] text-black font-bold text-lg hover:bg-[#f5d173] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#e5c163] focus:ring-offset-black cursor-pointer"
         >
-          Log in
+          Register
         </button>
       </form>
     </AuthLayout>

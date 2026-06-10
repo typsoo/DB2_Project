@@ -1,17 +1,18 @@
-import { Routes, Route } from "react-router-dom";
-import ScooterMap from "./pages/Map";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Register from "./pages/Register";
+import MapLayout from "./layouts/MapLayout";
 import Login from "./pages/Login";
 
 function App() {
   return (
-    <>
-      <Routes>
+    <Routes>
+      <Route element={<MapLayout />}>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Route>
 
-        <Route path="/map" element={<ScooterMap />} />
-      </Routes>
-    </>
+      <Route path="/" element={<Navigate to="/register" replace />} />
+    </Routes>
   );
 }
-
 export default App;

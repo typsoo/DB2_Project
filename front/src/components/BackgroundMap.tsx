@@ -266,12 +266,12 @@ const snazzyStyle = [
   },
 ];
 
-export default function ScooterMap() {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim();
+export default function BackgroundMap() {
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim() || "";
 
   return (
-    <div className="h-dvh w-full bg-[#000000]">
-      <APIProvider apiKey={apiKey as string}>
+    <div className=" h-full w-full bg-[#000000]">
+      <APIProvider apiKey={apiKey}>
         <Map
           style={{ width: "100%", height: "100%" }}
           defaultCenter={{ lat: 50.0614, lng: 19.9383 }}
