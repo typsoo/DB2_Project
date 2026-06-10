@@ -1,6 +1,22 @@
 "use client";
 
-import { APIProvider, Map } from "@vis.gl/react-google-maps";
+import { useState, useCallback, useRef } from "react";
+// Удален useLocation, так как он нам больше не нужен
+import {
+  APIProvider,
+  Map,
+  Marker,
+  type MapEvent,
+} from "@vis.gl/react-google-maps";
+// Define the shape of our scooter data from the backend
+interface Scooter {
+  id: number;
+  serialNumber: string;
+  chargeLevel: number; // Было batteryLevel
+  status: string;
+  latitude: number; // Было lat
+  longitude: number; // Было lon
+}
 
 const snazzyStyle = [
   {
@@ -269,16 +285,95 @@ const snazzyStyle = [
 export default function BackgroundMap() {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim() || "";
 
+  const [scooters, setScooters] = useState<Scooter[]>([]);
+
+  // Создаем ссылку для хранения ID нашего таймера
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Функция для запроса на бэкенд (осталась почти без изменений)
+  const fetchScootersInBounds = useCallback(
+    async (mapInstance: google.maps.Map) => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setScooters([]);
+        return;
+      }
+
+      const bounds = mapInstance.getBounds();
+      if (!bounds) return;
+
+      const minLat = bounds.getSouthWest().lat();
+      const minLon = bounds.getSouthWest().lng();
+      const maxLat = bounds.getNorthEast().lat();
+      const maxLon = bounds.getNorthEast().lng();
+
+      try {
+        const url = `http://localhost:8080/api/scooters/area?minLat=${minLat}&minLon=${minLon}&maxLat=${maxLat}&maxLon=${maxLon}`;
+
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setScooters(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch scooters in area:", error);
+      }
+    },
+    [],
+  );
+
+  // Новая функция-обработчик с задержкой (Debounce)
+  const handleMapIdle = useCallback(
+    // Используем правильный тип MapEvent
+    (e: MapEvent) => {
+      // Если карты по какой-то причине нет в событии, прерываемся
+      if (!e.map) return;
+
+      // 1. Если таймер уже был запущен (юзер снова подвинул карту), отменяем его
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+
+      // 2. Заводим новый таймер. Запрос уйдет только через 800 мс простоя.
+      // Можете изменить 800 на 1000 (1 секунда) или 500 (полсекунды) по вкусу.
+      debounceTimeoutRef.current = setTimeout(() => {
+        fetchScootersInBounds(e.map);
+      }, 800);
+    },
+    [fetchScootersInBounds],
+  );
+
   return (
-    <div className=" h-full w-full bg-[#000000]">
+    <div className="h-full w-full bg-[#000000]">
       <APIProvider apiKey={apiKey}>
         <Map
           style={{ width: "100%", height: "100%" }}
           defaultCenter={{ lat: 50.0614, lng: 19.9383 }}
           defaultZoom={14}
-          styles={snazzyStyle}
           disableDefaultUI={true}
-        />
+          styles={snazzyStyle}
+          onIdle={handleMapIdle}
+        >
+          {scooters.map((scooter) => (
+            <Marker
+              key={scooter.id}
+              position={{
+                lat: scooter.latitude, // Используем правильное имя с бэкенда
+                lng: scooter.longitude, // Используем правильное имя с бэкенда
+              }}
+              // При желании, вы даже можете использовать chargeLevel
+              // для отображения разных иконок!
+              title={`Самокат ${scooter.serialNumber} (Заряд: ${scooter.chargeLevel}%)`}
+            />
+          ))}
+        </Map>
       </APIProvider>
     </div>
   );
