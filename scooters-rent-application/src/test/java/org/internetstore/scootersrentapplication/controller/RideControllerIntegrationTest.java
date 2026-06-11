@@ -102,7 +102,7 @@ public class RideControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$").value("Insufficient funds to start the ride"));
+                .andExpect(jsonPath("$.message").value("Insufficient funds to start the ride"));
     }
 
     @Test

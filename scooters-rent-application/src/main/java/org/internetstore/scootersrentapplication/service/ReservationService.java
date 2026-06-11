@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -102,5 +104,29 @@ public class ReservationService {
 
         reservationRepository.save(reservation);
         scooterRepository.save(scooter);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReservationResponseDto> getUserReservationHistory(Integer userId) {
+        return reservationRepository.findAll().stream()
+                .filter(reservation -> reservation.getUser().getId().equals(userId))
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReservationResponseDto> getAllReservations() {
+        return reservationRepository.findAll().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    private ReservationResponseDto mapToDto(Reservation reservation) {
+        return new ReservationResponseDto(
+                reservation.getId(),
+                reservation.getScooter().getId(),
+                reservation.getStatus(),
+                reservation.getExpiresAt()
+        );
     }
 }

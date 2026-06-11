@@ -3,6 +3,7 @@ package org.internetstore.scootersrentapplication.service;
 import org.internetstore.scootersrentapplication.dto.RideDto;
 import org.internetstore.scootersrentapplication.dto.RideEndRequestDto;
 import org.internetstore.scootersrentapplication.dto.RideEndResponseDto;
+import org.internetstore.scootersrentapplication.dto.RideHistoryResponseDto;
 import org.internetstore.scootersrentapplication.dto.RideStartRequestDto;
 import org.internetstore.scootersrentapplication.entity.*;
 import org.internetstore.scootersrentapplication.entity.enums.ScooterStatus;
@@ -15,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RideService {
@@ -50,21 +53,21 @@ public class RideService {
 
         // Fetch scooter from DB with pessimistic lock to prevent concurrent rentals
         Scooter scooter = scooterRepository.findByIdWithLock(request.scooterId())
-                .orElseThrow(() -> new RuntimeException("Scooter was not found"));
+                .orElseThrow(() -> new IllegalStateException("Scooter was not found"));
 
         // Check if scooter is not in use or maintenance
         if (scooter.getStatus() == ScooterStatus.IN_USE || scooter.getStatus() == ScooterStatus.MAINTENANCE) {
-            throw new RuntimeException("Scooter is unavailable");
+            throw new IllegalStateException("Scooter is unavailable");
         }
 
         // Reservation logic handling
         if (scooter.getStatus() == ScooterStatus.RESERVED) {
             Reservation activeReservation = reservationRepository.findByScooterIdAndStatus(scooter.getId(), ReservationStatus.ACTIVE)
-                    .orElseThrow(() -> new RuntimeException("System error: Scooter is reserved but active reservation not found"));
+                    .orElseThrow(() -> new IllegalStateException("System error: Scooter is reserved but active reservation not found"));
 
             // Check if reservation belongs to the user trying to start the ride
             if (!activeReservation.getUser().getId().equals(user.getId())) {
-                throw new RuntimeException("Scooter is reserved by another user");
+                throw new IllegalStateException("Scooter is reserved by another user");
             }
 
             // Close the reservation as the user is taking the scooter
@@ -74,11 +77,11 @@ public class RideService {
 
 
         Wallet wallet = walletRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Wallet was not found"));
+                .orElseThrow(() -> new IllegalStateException("Wallet was not found"));
 
         // Check if account has the minimum amount needed to start
         if (wallet.getBalance().compareTo(MIN_START_BALANCE) < 0) {
-            throw new RuntimeException("Insufficient funds to start the ride");
+            throw new IllegalStateException("Insufficient funds to start the ride");
         }
 
         // Change scooter status to in use and save to DB
@@ -105,11 +108,11 @@ public class RideService {
 
         // find ride by id
         Ride ride = rideRepository.findById(request.rideId())
-                .orElseThrow(() -> new RuntimeException("Ride was not found"));
+                .orElseThrow(() -> new IllegalStateException("Ride was not found"));
 
         // check if ride wasn't already finished
         if (ride.getEndTime() != null) {
-            throw new RuntimeException("This ride is already finished");
+            throw new IllegalStateException("This ride is already finished");
         }
 
         // register end time and provided distance
@@ -131,7 +134,7 @@ public class RideService {
 
         // lock wallet to prevent double spending in the same fraction of a second
         Wallet wallet = walletRepository.findByUserIdWithLock(ride.getUser().getId())
-                .orElseThrow(() -> new RuntimeException("Wallet was not found"));
+                .orElseThrow(() -> new IllegalStateException("Wallet was not found"));
 
         // withdraw money from account even if it goes negative
         wallet.setBalance(wallet.getBalance().subtract(totalCost));
@@ -160,6 +163,31 @@ public class RideService {
                 totalCost,
                 endTime,
                 durationInMinutes
+        );
+    }
+
+    public List<RideHistoryResponseDto> getUserRideHistory(Integer userId) {
+        return rideRepository.findAll().stream()
+                .filter(ride -> ride.getUser().getId().equals(userId))
+                .map(this::mapToHistoryDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<RideHistoryResponseDto> getAllRides() {
+        return rideRepository.findAll().stream()
+                .map(this::mapToHistoryDto)
+                .collect(Collectors.toList());
+    }
+
+    private RideHistoryResponseDto mapToHistoryDto(Ride ride) {
+        return new RideHistoryResponseDto(
+                ride.getId(),
+                ride.getUser().getId(),
+                ride.getScooter().getId(),
+                ride.getStartTime(),
+                ride.getEndTime(),
+                ride.getDistance(),
+                ride.getTotalCost()
         );
     }
 }

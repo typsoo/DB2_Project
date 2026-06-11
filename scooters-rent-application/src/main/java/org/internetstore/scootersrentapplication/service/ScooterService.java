@@ -2,6 +2,7 @@ package org.internetstore.scootersrentapplication.service;
 
 import org.internetstore.scootersrentapplication.dto.ScooterCreateDto;
 import org.internetstore.scootersrentapplication.dto.ScooterLocationUpdateDto;
+import org.internetstore.scootersrentapplication.dto.ScooterUpdateDto;
 import org.internetstore.scootersrentapplication.entity.Scooter;
 import org.internetstore.scootersrentapplication.entity.enums.ScooterStatus;
 import org.internetstore.scootersrentapplication.repository.ScooterRepository;
@@ -46,15 +47,21 @@ public class ScooterService {
                 .orElseThrow(() -> new IllegalArgumentException("Scooter with id " + id + " not found"));
     }
 
+    public List<Scooter> getAllScooters() {
+        return scooterRepository.findAll();
+    }
+
     @Transactional
-    public Scooter updateLocation(Integer id, ScooterLocationUpdateDto dto) {
+    public Scooter updateScooter(Integer id, ScooterUpdateDto dto) {
         Scooter scooter = scooterRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Scooter not found"));
 
-
-        scooter.setLocation(geometryFactory.createPoint(
-                new Coordinate(dto.longitude(), dto.latitude())
-        ));
+        if (dto.chargeLevel() != null) {
+            scooter.setChargeLevel(dto.chargeLevel());
+        }
+        if (dto.status() != null) {
+            scooter.setStatus(dto.status());
+        }
 
         return scooterRepository.save(scooter);
     }

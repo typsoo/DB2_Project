@@ -2,6 +2,7 @@ package org.internetstore.scootersrentapplication.service;
 
 import org.internetstore.scootersrentapplication.dto.UserProfileDto;
 import org.internetstore.scootersrentapplication.dto.UserRegisterDto;
+import org.internetstore.scootersrentapplication.dto.UserResponseDto;
 import org.internetstore.scootersrentapplication.entity.User;
 import org.internetstore.scootersrentapplication.entity.Wallet;
 import org.internetstore.scootersrentapplication.repository.UserRepository;
@@ -12,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -63,6 +66,29 @@ public class UserService {
                 user.getFirstName(),
                 user.getLastName(),
                 wallet.getBalance(),
+                user.getCreatedAt()
+        );
+    }
+
+    public List<UserResponseDto> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::mapToUserResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    public UserResponseDto getUserById(Integer id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        return mapToUserResponseDto(user);
+    }
+
+    private UserResponseDto mapToUserResponseDto(User user) {
+        return new UserResponseDto(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getRole().name(),
                 user.getCreatedAt()
         );
     }

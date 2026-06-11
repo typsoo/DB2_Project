@@ -23,12 +23,18 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
 
+    // POST /api/auth/register
+    // Registers a new user in the system
     @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody UserRegisterDto dto) {
+    public ResponseEntity<User> register(
+            @Valid @RequestBody UserRegisterDto dto
+    ) {
         User createdUser = userService.registerUser(dto);
         return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
     }
 
+    // POST /api/auth/login
+    // Authenticates a user and returns a JWT token
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponseDto> authenticate(
             @Valid @RequestBody AuthenticationRequestDto request

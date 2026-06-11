@@ -1,6 +1,7 @@
 package org.internetstore.scootersrentapplication.service;
 
 import org.internetstore.scootersrentapplication.dto.DepositDto;
+import org.internetstore.scootersrentapplication.dto.TransactionDto;
 import org.internetstore.scootersrentapplication.entity.Transaction;
 import org.internetstore.scootersrentapplication.entity.Wallet;
 import org.internetstore.scootersrentapplication.entity.enums.TransactionType;
@@ -12,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class WalletService {
@@ -47,5 +51,22 @@ public class WalletService {
         transactionRepository.save(transaction);
 
         return wallet;
+    }
+
+    @Transactional(readOnly = true)
+    public List<TransactionDto> getTransactionHistory(Integer userId) {
+        Wallet wallet = walletRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+
+        return transactionRepository.findAll().stream()
+                .filter(tx -> tx.getWallet().getId().equals(wallet.getId()))
+                .map(tx -> new TransactionDto(
+                        tx.getId(),
+                        tx.getAmount(),
+                        tx.getType(),
+                        tx.getRide() != null ? tx.getRide().getId() : null,
+                        tx.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
     }
 }
