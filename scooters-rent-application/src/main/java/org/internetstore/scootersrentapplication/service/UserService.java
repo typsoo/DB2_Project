@@ -2,6 +2,7 @@ package org.internetstore.scootersrentapplication.service;
 
 import org.internetstore.scootersrentapplication.dto.UserProfileDto;
 import org.internetstore.scootersrentapplication.dto.UserRegisterDto;
+import org.internetstore.scootersrentapplication.dto.UserResponseDto;
 import org.internetstore.scootersrentapplication.entity.User;
 import org.internetstore.scootersrentapplication.entity.Wallet;
 import org.internetstore.scootersrentapplication.repository.UserRepository;
@@ -12,25 +13,33 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, WalletRepository walletRepository) {
+    public UserService(UserRepository userRepository, WalletRepository walletRepository, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
     public User registerUser(UserRegisterDto dto) {
+        if (userRepository.existsByEmail(dto.email())) {
+            throw new IllegalStateException("User with this email already exists");
+        }
+
         User user = new User();
-        user.setEmail(dto.getEmail());
-        user.setPasswordHash(dto.getPassword());
-        user.setFirstName(dto.getFirstName());
-        user.setLastName(dto.getLastName());
+        user.setEmail(dto.email());
+        user.setPasswordHash(passwordEncoder.encode(dto.password()));
+        user.setFirstName(dto.firstName());
+        user.setLastName(dto.lastName());
 
         User savedUser = userRepository.save(user);
 
@@ -51,15 +60,36 @@ public class UserService {
         Wallet wallet = walletRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Wallet not found for this user"));
 
-        UserProfileDto profileDto = new UserProfileDto();
-        profileDto.setId(user.getId());
-        profileDto.setEmail(user.getEmail());
-        profileDto.setFirstName(user.getFirstName());
-        profileDto.setLastName(user.getLastName());
-        profileDto.setCreatedAt(user.getCreatedAt());
+        return new UserProfileDto(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                wallet.getBalance(),
+                user.getCreatedAt()
+        );
+    }
 
-        profileDto.setBalance(wallet.getBalance());
+    public List<UserResponseDto> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::mapToUserResponseDto)
+                .collect(Collectors.toList());
+    }
 
-        return profileDto;
+    public UserResponseDto getUserById(Integer id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        return mapToUserResponseDto(user);
+    }
+
+    private UserResponseDto mapToUserResponseDto(User user) {
+        return new UserResponseDto(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getRole().name(),
+                user.getCreatedAt()
+        );
     }
 }

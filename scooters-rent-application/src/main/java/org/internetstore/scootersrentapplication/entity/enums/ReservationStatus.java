@@ -1,5 +1,5 @@
 package org.internetstore.scootersrentapplication.entity.enums;
 
 public enum ReservationStatus {
-    ACTIVE, COMPLETED, CANCELLED
+    ACTIVE, COMPLETED, CANCELLED, EXPIRED;
 }

@@ -1,16 +1,15 @@
 package org.internetstore.scootersrentapplication.dto;
 
-public class ScooterCreateDto {
-    private String serialNumber;
-    private Double latitude;
-    private Double longitude;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-    public String getSerialNumber() { return serialNumber; }
-    public void setSerialNumber(String serialNumber) { this.serialNumber = serialNumber; }
-
-    public Double getLatitude() { return latitude; }
-    public void setLatitude(Double latitude) { this.latitude = latitude; }
-
-    public Double getLongitude() { return longitude; }
-    public void setLongitude(Double longitude) { this.longitude = longitude; }
-}
+public record ScooterCreateDto(
+        @NotBlank(message = "Serial number is mandatory")
+        String serialNumber,
+        
+        @NotNull(message = "Latitude is mandatory")
+        Double latitude,
+        
+        @NotNull(message = "Longitude is mandatory")
+        Double longitude
+) {}

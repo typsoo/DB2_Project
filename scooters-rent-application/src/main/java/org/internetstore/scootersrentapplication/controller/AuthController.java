@@ -1,0 +1,41 @@
+package org.internetstore.scootersrentapplication.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.internetstore.scootersrentapplication.dto.AuthenticationRequestDto;
+import org.internetstore.scootersrentapplication.dto.AuthenticationResponseDto;
+import org.internetstore.scootersrentapplication.dto.UserRegisterDto;
+import org.internetstore.scootersrentapplication.entity.User;
+import org.internetstore.scootersrentapplication.service.AuthService;
+import org.internetstore.scootersrentapplication.service.UserService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final AuthService authService;
+    private final UserService userService;
+
+    // POST /api/auth/register
+    // Registers a new user in the system
+    @PostMapping("/register")
+    public ResponseEntity<User> register(
+            @Valid @RequestBody UserRegisterDto dto
+    ) {
+        User createdUser = userService.registerUser(dto);
+        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+    }
+
+    // POST /api/auth/login
+    // Authenticates a user and returns a JWT token
+    @PostMapping("/login")
+    public ResponseEntity<AuthenticationResponseDto> authenticate(
+            @Valid @RequestBody AuthenticationRequestDto request
+    ) {
+        return ResponseEntity.ok(authService.authenticate(request));
+    }
+}
