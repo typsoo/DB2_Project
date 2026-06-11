@@ -7,7 +7,6 @@ import { Navigate } from "react-router-dom";
 export default function Register() {
   const navigate = useNavigate();
 
-  // Initialize state for all registration fields
   const [formData, setFormData] = useState({
     name: "",
     surname: "",
@@ -23,7 +22,6 @@ export default function Register() {
     return <Navigate to="/map" replace />;
   }
 
-  // Handle input changes dynamically
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -38,19 +36,17 @@ export default function Register() {
 
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
-      return; // Stop execution if passwords are different
+      return;
     }
 
     setIsLoading(true);
 
     try {
-      // Send registration request to the backend
       const response = await fetch("http://localhost:8080/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        // We do not send confirmPassword to the backend, only required fields
         body: JSON.stringify({
           firstName: formData.name,
           lastName: formData.surname,
@@ -63,7 +59,6 @@ export default function Register() {
       if (response.ok) {
         navigate("/login");
       } else {
-        // Attempt to extract the error message from the backend (e.g., "Email already in use")
         const errorData = await response.json().catch(() => null);
         setError(
           errorData?.message || "Registration failed. Please try again.",
@@ -108,7 +103,6 @@ export default function Register() {
       footerLinkTo="/login"
     >
       <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-        {/* Display error message if it exists */}
         {error && (
           <div className="p-3 rounded bg-red-500/20 border border-red-500 text-red-200 text-sm">
             {error}
@@ -118,7 +112,7 @@ export default function Register() {
         {formFields.map((field) => (
           <CustomInput
             key={field.id}
-            id={field.id} // This also acts as the 'name' attribute in CustomInput
+            id={field.id}
             label={field.label}
             type={field.type}
             placeholder={field.placeholder}

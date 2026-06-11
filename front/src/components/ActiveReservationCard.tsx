@@ -4,11 +4,10 @@ interface Reservation {
   id: number;
   scooterId: number;
   status: string;
-  expiresAt: string; // LocalDateTime from backend
+  expiresAt: string;
 }
 
 interface ActiveReservationCardProps {
-  // Callback to refresh the map or markers when reservation status changes
   onStatusChange?: () => void;
 }
 
@@ -19,7 +18,6 @@ export default function ActiveReservationCard({
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
 
-  // Fetch the active reservation from your backend endpoint
   const fetchActiveReservation = useCallback(async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -40,7 +38,6 @@ export default function ActiveReservationCard({
         const data = await response.json();
         setReservation(data);
       } else if (response.status === 404) {
-        // No active reservation found for this user
         setReservation(null);
       }
     } catch (error) {
@@ -48,13 +45,10 @@ export default function ActiveReservationCard({
     }
   }, []);
 
-  // Handle countdown calculation
   useEffect(() => {
-    // Initial fetch on component mount
     fetchActiveReservation();
 
-    // Set up a listener to poll data periodically or handle updates
-    const globalRefreshInterval = setInterval(fetchActiveReservation, 30000); // Optional fallback poll every 30s
+    const globalRefreshInterval = setInterval(fetchActiveReservation, 30000);
 
     window.addEventListener("reservationUpdated", fetchActiveReservation);
 
@@ -64,7 +58,6 @@ export default function ActiveReservationCard({
     };
   }, [fetchActiveReservation]);
 
-  // Separate effect to drive the high-frequency 1-second countdown timer
   useEffect(() => {
     if (!reservation || !reservation.expiresAt) {
       setTimeLeft("");
@@ -78,12 +71,11 @@ export default function ActiveReservationCard({
 
       if (difference <= 0) {
         setTimeLeft("Expired");
-        setReservation(null); // Clear expired reservation from UI
+        setReservation(null);
         if (onStatusChange) onStatusChange();
         return;
       }
 
-      // Format minutes and seconds cleanly
       const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
@@ -93,14 +85,12 @@ export default function ActiveReservationCard({
       setTimeLeft(`${paddedMinutes}:${paddedSeconds}`);
     };
 
-    // Run calculation immediately and set up tick interval
     calculateTimeLeft();
     const countdownInterval = setInterval(calculateTimeLeft, 1000);
 
     return () => clearInterval(countdownInterval);
   }, [reservation, onStatusChange]);
 
-  // Cancel reservation action
   const handleCancel = async () => {
     if (!reservation) return;
 
@@ -120,7 +110,6 @@ export default function ActiveReservationCard({
       );
 
       if (response.ok || response.status === 24) {
-        // 204 No Content
         setReservation(null);
         if (onStatusChange) onStatusChange();
       }
@@ -131,7 +120,6 @@ export default function ActiveReservationCard({
     }
   };
 
-  // Show a placeholder if there is no active reservation
   if (!reservation) {
     return (
       <div className="pointer-events-auto absolute top-5 left-5 z-[1000] flex flex-col p-4 min-w-[260px] rounded-2xl bg-black/40 backdrop-blur-md border border-white/20 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-all duration-300">

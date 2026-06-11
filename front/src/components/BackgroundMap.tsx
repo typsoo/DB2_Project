@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-// Удален useLocation, так как он нам больше не нужен
 import {
   APIProvider,
   Map,
@@ -9,14 +8,13 @@ import {
   type MapEvent,
   InfoWindow,
 } from "@vis.gl/react-google-maps";
-// Define the shape of our scooter data from the backend
 interface Scooter {
   id: number;
   serialNumber: string;
-  chargeLevel: number; // Было batteryLevel
+  chargeLevel: number;
   status: string;
-  latitude: number; // Было lat
-  longitude: number; // Было lon
+  latitude: number;
+  longitude: number;
 }
 
 const snazzyStyle = [
@@ -287,7 +285,6 @@ export default function BackgroundMap() {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim() || "";
   const [scooters, setScooters] = useState<Scooter[]>([]);
 
-  // 2. State to track the currently selected scooter
   const [selectedScooter, setSelectedScooter] = useState<Scooter | null>(null);
 
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -343,10 +340,7 @@ export default function BackgroundMap() {
     [fetchScootersInBounds],
   );
 
-  // 3. Function to handle the reservation button click
   const handleReservation = async (scooterId: number) => {
-    // Here you will send a POST request to your Spring Boot backend
-
     const token = localStorage.getItem("token");
     const response = await fetch("http://localhost:8080/api/reservations", {
       method: "POST",
@@ -385,22 +379,17 @@ export default function BackgroundMap() {
                 lng: scooter.longitude,
               }}
               title={`Scooter ${scooter.serialNumber} (Battery: ${scooter.chargeLevel}%)`}
-              // THIS IS THE MISSING LINE:
-              // It tells React to set this specific scooter into the state when clicked
               onClick={() => setSelectedScooter(scooter)}
             />
           ))}
 
-          {/* 5. Render the InfoWindow conditionally if a scooter is selected */}
           {selectedScooter && (
             <InfoWindow
               position={{
                 lat: selectedScooter.latitude,
                 lng: selectedScooter.longitude,
               }}
-              // Handle clicking the 'X' button on the InfoWindow
               onCloseClick={() => setSelectedScooter(null)}
-              // Offset to push the popup slightly above the marker
               pixelOffset={[0, -35]}
             >
               {/* Glassmorphism container: semi-transparent background, blur, and subtle border */}
